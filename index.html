@@ -70,16 +70,21 @@ a{color:var(--blue)}
 .strip-in .pill{background:rgba(255,255,255,.14);padding:2px 9px;border-radius:99px;font-family:var(--mono);font-size:11.5px}
 
 /* ---------- Focus mode (opt-in: CONFIG.focusMode) ---------- */
-.hdr-tab{display:none}
-.focus-only{display:none!important}
 body.fmode .topbar{position:fixed;left:0;right:0;top:0;transform:translateY(-100%);transition:transform .28s ease, box-shadow .28s ease}
 body.fmode.hdr-open .topbar{transform:none;box-shadow:0 10px 28px rgba(20,33,59,.14)}
-body.fmode .hdr-tab{display:flex;position:absolute;left:50%;bottom:-31px;transform:translateX(-50%);height:31px;padding:0 14px 0 12px;align-items:center;gap:7px;background:#fff;border:1px solid var(--line);border-top:none;border-radius:0 0 10px 10px;font-size:12px;font-weight:600;color:var(--ink-2);cursor:pointer;box-shadow:0 6px 14px rgba(20,33,59,.07);white-space:nowrap}
-body.fmode .hdr-tab:hover{color:var(--blue)}
-body.fmode .hdr-tab .knob{width:26px;height:14px;border-radius:99px;background:var(--grey);position:relative;transition:background .2s}
-body.fmode .hdr-tab .knob::after{content:"";position:absolute;left:2px;top:2px;width:10px;height:10px;border-radius:50%;background:#fff;transition:left .2s}
-body.fmode.hdr-open .hdr-tab .knob{background:var(--blue)}
-body.fmode.hdr-open .hdr-tab .knob::after{left:14px}
+.hdr-tabs{display:none}
+body.fmode .hdr-tabs{display:flex;position:absolute;left:50%;bottom:-31px;transform:translateX(-50%);background:#fff;border:1px solid var(--line);border-top:none;border-radius:0 0 10px 10px;box-shadow:0 6px 14px rgba(20,33,59,.07);overflow:hidden}
+.hdr-tab{display:flex;height:31px;padding:0 14px 0 12px;align-items:center;gap:7px;background:none;border:none;font-size:12px;font-weight:600;color:var(--ink-2);cursor:pointer;white-space:nowrap}
+.hdr-tab + .hdr-tab{border-left:1px solid var(--line)}
+.hdr-tab:hover{color:var(--blue)}
+body.fmode:not(.st-quiz) #palTab{display:none}
+.hdr-tab .knob{width:26px;height:14px;border-radius:99px;background:var(--grey);position:relative;transition:background .2s;flex:none}
+.hdr-tab .knob::after{content:"";position:absolute;left:2px;top:2px;width:10px;height:10px;border-radius:50%;background:#fff;transition:left .2s}
+body.hdr-open #hdrTab .knob,body.pal-on #palTab .knob{background:var(--blue)}
+body.hdr-open #hdrTab .knob::after,body.pal-on #palTab .knob::after{left:14px}
+body.fmode.st-quiz:not(.pal-on) .exam{grid-template-columns:minmax(0,960px);justify-content:center}
+body.fmode.st-quiz:not(.pal-on) .pal{display:none}
+body.fmode .pal-toggle{display:inline-flex}
 body.fmode .wrap{padding-top:46px}
 body.fmode .pal,body.fmode .side-card,body.fmode .side-card-wrap{top:46px}
 body.fmode .focus-only{display:flex!important}
@@ -420,7 +425,8 @@ body.fmode .focus-only{display:flex!important}
   .pal{position:fixed;top:auto;bottom:0;left:0;right:0;z-index:60;border-radius:14px 14px 0 0;max-height:78vh;overflow:auto;transform:translateY(100%);transition:transform .25s;box-shadow:0 -10px 30px rgba(0,0,0,.14)}
   .pal.open{transform:none}
   .pal-toggle{display:inline-flex}
-  body.fmode .pal{top:auto}
+  body.fmode .pal{top:auto;display:block!important}
+  body.fmode.pal-on .pal{transform:none}
   .task{grid-template-columns:minmax(0,1fr)}
   .side-card{position:static}
   .side-card-wrap{position:static}
@@ -493,7 +499,7 @@ body.fmode .focus-only{display:flex!important}
       </div>
     </div>
   </div>
-  <button class="hdr-tab" id="hdrTab" type="button" aria-expanded="false"><span class="knob"></span><span id="hdrTabTxt">Show header</span></button>
+  <div class="hdr-tabs"><button class="hdr-tab" id="hdrTab" type="button" aria-expanded="false"><span class="knob"></span><span id="hdrTabTxt">Show header</span></button><button class="hdr-tab" id="palTab" type="button" aria-expanded="false"><span class="knob"></span><span id="palTabTxt">Show palette</span></button></div>
   <div class="strip">
     <div class="strip-in">
       <span id="stripModule">Gmail</span>
@@ -669,7 +675,7 @@ body.fmode .focus-only{display:flex!important}
     .mr-att{display:inline-block;font-family:var(--mono);font-size:11px;background:#F1F2F5;border-radius:4px;padding:1px 6px;margin-top:5px;color:var(--ink-2)}
     .mr-ctl{display:flex;flex-direction:column;gap:6px;align-items:flex-end}
     .seg{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden}
-    .seg label{cursor:pointer}
+    .seg label{cursor:pointer;position:relative}
     .seg input{position:absolute;opacity:0;pointer-events:none}
     .seg span{display:block;padding:5px 10px;font-size:12px;font-weight:600;color:var(--ink-2);background:#fff}
     .seg label + label span{border-left:1px solid var(--line)}
@@ -983,6 +989,8 @@ let S = load() || freshState();
 function show(id){
   ['intro','exam','tasks','eval','result'].forEach(k => $('#scr-'+k).classList.toggle('hidden', k!==id));
   setFocus(['exam','tasks','eval'].includes(id));
+  document.body.classList.toggle('st-quiz', id==='exam');
+  if(id!=='exam' && typeof setPalette==='function' && document.body.classList.contains('pal-on')) setPalette(false);
   window.scrollTo({top:0});
 }
 function setFocus(on){
@@ -997,6 +1005,14 @@ function setHeader(open){
   $('#hdrTabTxt').textContent = open ? 'Hide header' : 'Show header';
 }
 $('#hdrTab').addEventListener('click', () => setHeader(!document.body.classList.contains('hdr-open')));
+function setPalette(open){
+  document.body.classList.toggle('pal-on', !!open);
+  $('#pal').classList.toggle('open', !!open);
+  $('#palTab').setAttribute('aria-expanded', open ? 'true' : 'false');
+  $('#palTabTxt').textContent = open ? 'Hide palette' : 'Show palette';
+}
+$('#palTab').addEventListener('click', () => setPalette(!document.body.classList.contains('pal-on')));
+const isNarrow = () => window.matchMedia('(max-width:1080px)').matches;
 function toast(msg, warn){
   const t = $('#toast'); t.textContent = msg; t.className = 'toast' + (warn?' warn':'');
   clearTimeout(toast._t); toast._t = setTimeout(()=>t.classList.add('hidden'), 3800);
@@ -1077,12 +1093,12 @@ function renderQuestion(){
   renderPalette(); renderSecTabs(); save();
 }
 $('#qOpts').addEventListener('change', e => { const q = QUESTIONS[S.cur]; S.answers[q.id] = +e.target.value; renderPalette(); renderSecTabs(); save(); });
-function go(i){ if(i<0||i>=QUESTIONS.length) return; S.cur = i; renderQuestion(); $('#pal').classList.remove('open'); }
-$('#bNext').onclick = () => { if(S.cur<QUESTIONS.length-1) go(S.cur+1); else { renderPalette(); if(getComputedStyle($('#bPal')).display!=='none') $('#pal').classList.add('open'); toast('Saved. Review the palette, or submit Section A.'); } };
+function go(i){ if(i<0||i>=QUESTIONS.length) return; S.cur = i; renderQuestion(); if(isNarrow()) setPalette(false); }
+$('#bNext').onclick = () => { if(S.cur<QUESTIONS.length-1) go(S.cur+1); else { renderPalette(); if(CONFIG.focusMode || isNarrow()) setPalette(true); toast('Saved. Review the palette, or submit Section A.'); } };
 $('#bPrev').onclick = () => go(S.cur-1);
 $('#bClear').onclick = () => { delete S.answers[QUESTIONS[S.cur].id]; renderQuestion(); };
 $('#bMark').onclick = () => { const id = QUESTIONS[S.cur].id; if(S.marked[id]){ delete S.marked[id]; renderQuestion(); } else { S.marked[id] = true; if(S.cur<QUESTIONS.length-1) go(S.cur+1); else renderQuestion(); } };
-$('#bPal').onclick = () => $('#pal').classList.toggle('open');
+$('#bPal').onclick = () => setPalette(!$('#pal').classList.contains('open'));
 
 function counts(){
   const c = {nv:0,na:0,an:0,mk:0,am:0}; QUESTIONS.forEach(q => c[qStatus(q)]++); return c;
